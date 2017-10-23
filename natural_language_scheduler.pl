@@ -15,8 +15,9 @@
 % Who manages department X?
 
 % Question that work with current format:
-% Who is working in the morning?
-% Who is working in the afternoon?
+% Who is working 'in the morning' 'on Monday' 'In Electronics'? X
+% Who is working in the afternoon? X
+% Who is working in ELECTRONICS in the afternoon?
 % Is Corey working in the morning?
 
 noun_phrase(T0,T4,Ind,C0,C4) :-
@@ -47,14 +48,17 @@ adj([computer, science | T],T,Ind,C,[dept(Ind,comp_sci)|C]).
 
 % noun(T0,T1,Ind,C0,C1) is true if T0-T1 is a noun that provides properties C1-C0 to Ind
 noun([employee | T],T,Ind,[employee(Ind)|C],C).
+noun([day | T],T,Ind,[day(Ind)|C],C).
 noun([work_shift | T],T,Ind,[work_shift(Ind)|C],C).
 % The following are for proper nouns. Note that the name affects the grammar
 noun([Ind | T],T,Ind,C,C) :- employee(Ind).
 noun([Ind | T],T,Ind,C,C) :- work_shift(Ind).
+noun([Ind | T],T,Ind,C,C) :- day(Ind).
 
 % reln(T0,T1,I1,I2,R0,R1) is true if T0-T1 is a relation
 %   that provides relations R1-R0 on individuals I1 and I2
 reln([working, in | T],T,I1,I2,[working_in(I1,I2)|C],C).
+reln([working, on | T],T,I1,I2,[working_on(I1,I2)|C],C).
 
 question([is | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
@@ -94,7 +98,11 @@ employee(lyndon).
 % Working
 % -------
 working_in(corey,morning).
+working_in(jack,morning).
 working_in(lyndon,afternoon).
+working_on(lyndon,monday).
+
+day(monday).
 
 % Departments
 % -----------
@@ -107,3 +115,5 @@ working_in(lyndon,afternoon).
 % Jobs
 % ----
 % job(1, clerk, 12).
+
+ %
