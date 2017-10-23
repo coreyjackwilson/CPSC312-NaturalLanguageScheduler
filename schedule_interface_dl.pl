@@ -6,6 +6,7 @@ noun_phrase(T0,T4,Ind,C0,C4) :-
 
 det([the | T],T,_,C,C).
 det([a | T],T,_,C,C).
+det([an | T],T,_,C,C).
 det(T,T,_,C,C).
 
 adjectives(T0,T2,Ind,C0,C2) :-
@@ -22,20 +23,34 @@ mp([that|T0],T2,I1,C0,C2) :-
 mp(T,T,_,C,C).
 
 adj([grocery,department | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
+adj([grocery | T],T,Ind,[grocery_dept(Ind)|C],C).
+adj([deli,department | T],T,Ind,[grocery_dept(Ind)|C],C).
+adj([deli | T],T,Ind,[grocery_dept(Ind)|C],C).
+adj([checkout | T],T,Ind,[checkout(Ind)|C],C).
+adj([cashier | T],T,Ind,[checkout(Ind)|C],C).
 
+% Hours adjectives
+adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
+adj([part,time | T],T,Ind,[part_time(Ind)|C],C).
+
+% Roles
 noun([employee | T],T,Ind,[employee(Ind)|C],C).
 noun([manager | T],T,Ind,[manager(Ind)|C],C).
-noun([day | T],T,Ind,[day(Ind)|C],C).
-noun([shift | T],T,Ind,[day(Ind)|C],C).
-
 noun([Ind | T],T,Ind,C,C) :- employee(Ind).
 noun([Ind | T],T,Ind,C,C) :- manager(Ind).
+
+% Shifts and Days
+noun([day | T],T,Ind,[day(Ind)|C],C).
+noun([shift | T],T,Ind,[shift(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- day(Ind).
 noun([Ind | T],T,Ind,C,C) :- shift(Ind).
 
+% Relations
 reln([works, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
+reln([working, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([works, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
+reln([working, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
+
 
 question([is | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
@@ -85,15 +100,24 @@ manager(corey).
 
 employee(mary).
 employee(john).
+employee(lyndon).
 
 hours(corey, 40).
 hours(lyndon, 20).
+hours(mary, 40).
+hours(john, 20).
 
 full_time(E):-
     hours(E,H),
     H >= 37.5.
 
+part_time(E):-
+    hours(E,H),
+    H < 37.5.
+
 grocery_dept(corey).
+deli_dept(corey).
+checkout(mary).
 
 /* Try the following queries
 | ?- ask([is,john,enrolled,in,cs312],_).
@@ -120,3 +144,11 @@ grocery_dept(corey).
 % ask([what,manager,works,in,evening],X).
 % ask([what,manager,works,on,monday,works,in,evening], X).
 % ask([what,employee,works,on,monday,works,in,evening], X).
+
+:- begin_tests(schedule_interface_dl).
+
+test(manager) :-
+  manager(X),
+  assertion(X == corey).
+
+:- end_tests(schedule_interface_dl).
