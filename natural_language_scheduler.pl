@@ -3,6 +3,15 @@
 % 17400110
 
 % Rules for the natural language parsing
+% ======================================
+
+% Example Questions
+% -----------------
+% When does X work?
+% Who works today?
+% Who works in department X?
+% Who manages department X?
+
 
 
 
