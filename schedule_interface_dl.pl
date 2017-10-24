@@ -1,4 +1,14 @@
-:- dynamic employee/1, manager/1.
+% :- dynamic employee/1, manager/1.
+
+:- use_module(library(persistency)).
+
+:- persistent fact(fact1:any, fact2:any).
+
+:- initialization(init).
+
+init :-
+  absolute_file_name('fact.db', File, [access(write)]),
+  db_attach(File, []).
 
 noun_phrase(T0,T4,Ind,C0,C4) :-
     det(T0,T1,Ind,C0,C1),
@@ -71,7 +81,7 @@ question([who,is | T0],T1,Ind,C0,C1) :-
     noun_phrase(T0,T1,Ind,C0,C1).
 question([who,is | T0],T1,Ind,C0,C1) :-
     adjectives(T0,T1,Ind,C0,C1).
-question([what | T0],T2,Ind,C0,C2) :-      % allows for a "what ... is ..."
+question([what | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,[is|T1],Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
 question([what | T0],T2,Ind,C0,C2) :-
@@ -88,7 +98,7 @@ demand(Q, A) :-
 
 prove_all([]).
 prove_all([H|T]) :-
-    call(H),      % built-in Prolog predicate calls an atom
+    call(H),
     prove_all(T).
 
 % Actions
@@ -132,7 +142,7 @@ works_in(lyndon,afternoon).
 works_on(john,monday).
 works_on(corey,monday).
 works_on(mary,tuesday).
-works_on(lyndon,evening).
+works_on(lyndon,m).
 
 day(monday).
 day(tuesday).
