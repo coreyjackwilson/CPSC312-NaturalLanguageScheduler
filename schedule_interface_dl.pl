@@ -266,5 +266,12 @@ test(ask_grocery_dept_employee_works_on_monday_works_on_wednesday_works_in_eveni
   ask([what,grocery,department,manager,works,on,monday,works,on,friday,works,in,evening],E), 
   assertion(E == corey).
 
+test(change_employee_to_manager) :-
+  manager(X),
+  assertion(X == corey).
+
+test(change_manager_to_employee) :-
+  manager(X),
+  assertion(X == corey).
 
 :- end_tests(schedule_interface_dl).
