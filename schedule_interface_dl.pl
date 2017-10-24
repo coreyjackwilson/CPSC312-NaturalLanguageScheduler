@@ -75,12 +75,19 @@ noun([shift | T],T,Ind,[shift(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- day(Ind).
 noun([Ind | T],T,Ind,C,C) :- shift(Ind).
 noun([Ind | T],T,Ind,C,C) :- integer(Ind).
+noun([Ind | T],T,Ind,C,C) :- role(Ind).
+noun([Ind | T],T,Ind,C,C) :- department(Ind).
 
 % Question Relations
 reln([works, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([working, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([works, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 reln([working, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
+reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
+reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
+reln([hours, to | T],T,I1,I2,[change_hours(I1,I2)|C],C).
+reln([role, to | T],T,I1,I2,[change_role(I1,I2)|C],C).
+reln([department, to | T],T,I1,I2,[change_dept(I1,I2)|C],C).
 
 % Questions
 question([is | T0],T2,Ind,C0,C2) :-
@@ -110,11 +117,6 @@ prove_all([H|T]) :-
 
 % Action Logic
 % ------------
-
-% Action Relations
-reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
-reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
-reln([hours, to | T],T,I1,I2,[change_hours(I1,I2)|C],C).
 
 % Actions
 action([promote | T0],T2,Ind,C0,C2) :-
@@ -156,6 +158,18 @@ change_hours(X, Y) :-
   retractall_hours(X, _),
   assert_hours(X, Y).
 
+change_role(X, Y) :-
+  Y == manager ->
+    retractall_employee(X),
+    assert_manager(X);
+  Y == employee ->
+    retractall_manager(X),
+    assert_employee(X).
+
+change_dept(X, Y) :-
+    retractall_has_dept(X, _),
+    assert_has_dept(X, Y).
+
 % General Rules
 % =============
 day(monday).
@@ -169,6 +183,14 @@ day(sunday).
 shift(morning).
 shift(afternoon).
 shift(evening).
+
+role(manager).
+role(employee).
+
+department(grocery).
+department(deli).
+department(checkout).
+department(customer_service).
 
 full_time(E):-
     hours(E,H),
