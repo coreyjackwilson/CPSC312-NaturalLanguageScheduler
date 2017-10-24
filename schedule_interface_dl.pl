@@ -157,32 +157,6 @@ part_time(E):-
     hours(E,H),
     H < 37.5.
 
-/* Try the following queries
-| ?- ask([is,john,enrolled,in,cs312],_).
-| ?- question([is,john,enrolled,in,cs312],[],A,C,[]).
-| ?- ask([who,is,a,student],A).
-| ?- question([who,is,a,student],[],A,C,[]).
-| ?- ask([who,is,tall],A).
-| ?- ask([is,john,enrolled,in,a,computer,science,course],_).
-| ?- question([is,john,enrolled,in,a,computer,science,course],[],A,C,[]).
-| ?- ask([who,is,enrolled,in,a,computer,science,course],A).
-| ?- question([who,is,enrolled,in,a,computer,science,course],[],A,C,[]).
-| ?- ask([who,is,a,tall,student,enrolled,in,a,computer,science,course],A).
-| ?- question([who,is,a,tall,student,enrolled,in,a,computer,science,course],[],A,C,[]).
-| ?- ask([what,student,is,enrolled,in,a,computer,science,course],A).
-| ?- ask([what,student,passed,a,computer,science,course],A).
-| ?- ask([what,student,enrolled,in,a,math,course,passed,a,computer,science,course],A).
-| ?- ask([what,student,passed,a,computer,science,course,enrolled,in,a,math,course],A).
-| ?- ask([what,student,passed,cs312],A).
-| ?- question([what,student,passed,a,computer,science,course,enrolled,in,a,math,course],[],A,C,[]).
-| ?- question([what,student,enrolled,in,a,math,course,passed,a,computer,science,course],[],A,C,[]).
-*/
-
-% ask([who,is,works,in,afternoon],X).
-% ask([what,manager,works,in,evening],X).
-% ask([what,manager,works,on,monday,works,in,evening], X).
-% ask([what,employee,works,on,monday,works,in,evening], X).
-
 :- begin_tests(schedule_interface_dl).
 
 test(manager) :-
