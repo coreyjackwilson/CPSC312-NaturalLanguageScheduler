@@ -1,6 +1,6 @@
 % Natural Language schedule
 % Corey Wilson - 17400110
-% Lyndon Won -
+% Lyndon Won - 19386144
 
 % Persistence Logic
 % =================
@@ -91,6 +91,9 @@ reln([department, to | T],T,I1,I2,[change_dept(I1,I2)|C],C).
 
 % Questions
 question([is | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1),
+    mp(T1,T2,Ind,C1,C2).
+question([who,is | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
 question([who,is | T0],T1,Ind,C0,C1) :-
@@ -237,6 +240,10 @@ test(ask_who_is_working_on_working_in) :-
   ask([who,is,working,on,monday,working,in,afternoon],E),
   assertion(E == john).
 
+test(ask_who_is_employee_working_on_working_in) :-
+  ask([who,is,an,employee,working,on,monday,working,in,afternoon],E),
+  assertion(E == john).
+
 test(ask_what_employee_works_on_works_in) :-
   ask([what,employee,works,on,monday,works,in,afternoon],E),
   assertion(E == john).
@@ -263,7 +270,7 @@ test(ask_what_full_time_deli_department_manager_works_on_monday_work_in_evening)
 
 % NOT WORKING: something wrong when works in is added
 test(ask_grocery_dept_employee_works_on_monday_works_on_wednesday_works_in_evening) :-
-  ask([what,grocery,department,manager,works,on,monday,works,on,friday,works,in,evening],E), 
+  ask([what,grocery,department,manager,works,on,monday,works,on,friday,works,in,evening],E),
   assertion(E == corey).
 
 test(change_employee_to_manager) :-
