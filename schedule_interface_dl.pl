@@ -26,7 +26,7 @@ mp(T,T,_,C,C).
 
 adj([grocery,department | T],T,Ind,[grocery_dept(Ind)|C],C).
 adj([grocery | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([deli,department | T],T,Ind,[grocery_dept(Ind)|C],C).
+adj([deli,department | T],T,Ind,[deli_dept(Ind)|C],C).
 adj([deli | T],T,Ind,[grocery_dept(Ind)|C],C).
 adj([checkout | T],T,Ind,[checkout(Ind)|C],C).
 adj([cashier | T],T,Ind,[checkout(Ind)|C],C).
@@ -109,11 +109,13 @@ shift(evening).
 works_in(john,afternoon).
 works_in(mary,morning).
 works_in(corey,evening).
-works_in(lyndon,afternoon).
+works_in(lyndon,evening).
 
 works_on(john,monday).
 works_on(corey,monday).
 works_on(mary,tuesday).
+works_on(lyndon,monday).
+works_on(lyndon,wednesday).
 
 day(monday).
 day(tuesday).
@@ -140,30 +142,9 @@ part_time(E):-
     hours(E,H),
     H < 37.5.
 
-grocery_dept(corey).
+grocery_dept(lyndon).
 deli_dept(corey).
 checkout(mary).
-
-/* Try the following queries
-| ?- ask([is,john,enrolled,in,cs312],_).
-| ?- question([is,john,enrolled,in,cs312],[],A,C,[]).
-| ?- ask([who,is,a,student],A).
-| ?- question([who,is,a,student],[],A,C,[]).
-| ?- ask([who,is,tall],A).
-| ?- ask([is,john,enrolled,in,a,computer,science,course],_).
-| ?- question([is,john,enrolled,in,a,computer,science,course],[],A,C,[]).
-| ?- ask([who,is,enrolled,in,a,computer,science,course],A).
-| ?- question([who,is,enrolled,in,a,computer,science,course],[],A,C,[]).
-| ?- ask([who,is,a,tall,student,enrolled,in,a,computer,science,course],A).
-| ?- question([who,is,a,tall,student,enrolled,in,a,computer,science,course],[],A,C,[]).
-| ?- ask([what,student,is,enrolled,in,a,computer,science,course],A).
-| ?- ask([what,student,passed,a,computer,science,course],A).
-| ?- ask([what,student,enrolled,in,a,math,course,passed,a,computer,science,course],A).
-| ?- ask([what,student,passed,a,computer,science,course,enrolled,in,a,math,course],A).
-| ?- ask([what,student,passed,cs312],A).
-| ?- question([what,student,passed,a,computer,science,course,enrolled,in,a,math,course],[],A,C,[]).
-| ?- question([what,student,enrolled,in,a,math,course,passed,a,computer,science,course],[],A,C,[]).
-*/
 
 % ask([who,is,works,in,afternoon],X).
 % ask([what,manager,works,in,evening],X).
@@ -172,8 +153,79 @@ checkout(mary).
 
 :- begin_tests(schedule_interface_dl).
 
+% FACT TESTING
 test(manager) :-
   manager(X),
   assertion(X == corey).
+
+test(employee) :-
+  employee(X),
+  assertion(X == mary).
+
+test(hours) :-
+  hours(john,X),
+  assertion(X == 20).
+
+test(full_time) :-
+  full_time(E),
+  assertion(E == corey).
+
+test(part_time) :-
+  part_time(E),
+  assertion(E == lyndon).
+
+% BASIC ASK TESTING
+test(ask_full_time) :-
+  ask([who,is,a,full,time,employee],E),
+  assertion(E == mary).
+
+test(ask_deli_dept) :-
+  ask([who,is,the,deli,department,manager],E),
+  assertion(E == corey).
+
+test(ask_who_is_working_in) :-
+  ask([who,is,working,in,the,morning],E),
+  assertion(E == mary).
+
+test(ask_who_is_working_on) :-
+  ask([who,is,working,on,monday],E),
+  assertion(E == john).
+
+% MULTIPLE RELATION/ADJECTIVE ASK TESTING
+
+% NOT WORKING: same 'ask' works when starting with 'what'
+test(ask_who_is_working_on_working_in) :-
+  ask([who,is,working,on,monday,working,in,evening],E),
+  assertion(E == lyndon).
+
+test(ask_what_employee_works_on_works_in) :-
+  ask([what,employee,works,on,monday,works,in,evening],E),
+  assertion(E == lyndon).
+
+test(ask_what_employee_works_in_works_on) :-
+  ask([what,employee,works,in,afternoon,works,on,monday],E),
+  assertion(E == john).
+
+test(ask_what_manager_works_in_works_on) :-
+  ask([what,manager,works,in,evening,works,on,monday],E),
+  assertion(E == corey).
+
+test(ask_grocery_dept_employee_works_on_monday_works_in_morning) :-
+  ask([what,grocery,employee,works,on,monday,works,in,evening],E),
+  assertion(E == lyndon).
+
+test(ask_what_grocery_employee_works_on_monday_works_on_wednesday) :-
+  ask([what,grocery,employee,works,on,monday,works,on,wednesday],E),
+  assertion(E == lyndon).
+
+test(ask_what_full_time_deli_department_manager_works_on_monday_work_in_evening) :-
+  ask([what,full,time,deli,department,manager,works,on,monday,works,in,evening],E),
+  assertion(E == corey).
+
+% NOT WORKING: something wrong when works in is added
+test(ask_grocery_dept_employee_works_on_monday_works_on_wednesday_works_in_evening) :-
+  ask([what,grocery,employee,works,on,monday,works,on,wednesday,works,in,evening],E),
+  assertion(E == lyndon).
+
 
 :- end_tests(schedule_interface_dl).
