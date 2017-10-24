@@ -2,7 +2,13 @@
 
 :- use_module(library(persistency)).
 
-:- persistent fact(fact1:any, fact2:any).
+:- persistent
+        manager(name:atom),
+        employee(name:atom),
+        hours(name:atom, amount:integer),
+        works_on(name:atom, oneof([monday, tuesday, wednesday, thursday, friday, saturday, sunday]) ),
+        works_in(name:atom, oneof([morning, afternoon, evening])),
+        has_dept(name:atom, oneof([grocery, deli, checkout, customer_service])).
 
 :- initialization(init).
 
@@ -38,12 +44,13 @@ mp([to|T0],T2,I1,C0,C2) :-
     noun_phrase(T1,T2,I2,C1,C2).
 mp(T,T,_,C,C).
 
-adj([grocery,department | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([grocery | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([deli,department | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([deli | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([checkout | T],T,Ind,[checkout(Ind)|C],C).
-adj([cashier | T],T,Ind,[checkout(Ind)|C],C).
+% Department adjectives
+adj([grocery,department | T],T,Ind,[dept(Ind, grocery)|C],C).
+adj([grocery | T],T,Ind,[dept(Ind, grocery)|C],C).
+adj([deli,department | T],T,Ind,[dept(Ind, deli)|C],C).
+adj([deli | T],T,Ind,[dept(Ind, deli)|C],C).
+adj([checkout | T],T,Ind,[dept(Ind, checkout)|C],C).
+adj([cashier | T],T,Ind,[dept(Ind, checkout)|C],C).
 
 % Hours adjectives
 adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
@@ -115,51 +122,32 @@ action([schedule | T0],T2,Ind,C0,C2) :-
     mp(T1,T2,Ind,C1,C2).
 
 promote(X) :-
-  retract(employee(X)),
-  assert(manager(X)).
+  retractall_employee(X),
+  assert_manager(X).
 
 demote(X) :-
-  retract(manager(X)),
-  assert(employee(X)).
+  retractall_manager(X),
+  assert_employee(X).
 
 work_on(X, Y) :-
-  retract(works_on(X, Y)),
+  retractall_works_on(works_on(X, Y)),
   assert(works_on(X, Y)).
 
 work_in(X, Y) :-
-  retract(works_in(X, Y)),
+  retractall_works_in(works_in(X, Y)),
   assert(works_in(X, Y)).
-
-shift(morning).
-shift(afternoon).
-shift(evening).
-
-works_in(john,afternoon).
-works_in(mary,morning).
-works_in(corey,evening).
-works_in(lyndon,afternoon).
-
-works_on(john,monday).
-works_on(corey,monday).
-works_on(mary,tuesday).
-works_on(lyndon,m).
 
 day(monday).
 day(tuesday).
 day(wednesday).
 day(thursday).
 day(friday).
+day(saturday).
+day(sunday).
 
-manager(corey).
-
-employee(mary).
-employee(john).
-employee(lyndon).
-
-hours(corey, 40).
-hours(lyndon, 20).
-hours(mary, 40).
-hours(john, 20).
+shift(morning).
+shift(afternoon).
+shift(evening).
 
 full_time(E):-
     hours(E,H),
@@ -168,11 +156,6 @@ full_time(E):-
 part_time(E):-
     hours(E,H),
     H < 37.5.
-
-grocery_dept(corey).
-deli_dept(lyndon).
-checkout(mary).
-customer_service_dept(lyndon).
 
 /* Try the following queries
 | ?- ask([is,john,enrolled,in,cs312],_).
