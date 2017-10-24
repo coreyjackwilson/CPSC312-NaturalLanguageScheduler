@@ -45,12 +45,12 @@ mp([to|T0],T2,I1,C0,C2) :-
 mp(T,T,_,C,C).
 
 % Department adjectives
-adj([grocery,department | T],T,Ind,[dept(Ind, grocery)|C],C).
-adj([grocery | T],T,Ind,[dept(Ind, grocery)|C],C).
-adj([deli,department | T],T,Ind,[dept(Ind, deli)|C],C).
-adj([deli | T],T,Ind,[dept(Ind, deli)|C],C).
-adj([checkout | T],T,Ind,[dept(Ind, checkout)|C],C).
-adj([cashier | T],T,Ind,[dept(Ind, checkout)|C],C).
+adj([grocery,department | T],T,Ind,[has_dept(Ind, grocery)|C],C).
+adj([grocery | T],T,Ind,[has_dept(Ind, grocery)|C],C).
+adj([deli,department | T],T,Ind,[has_dept(Ind, deli)|C],C).
+adj([deli | T],T,Ind,[has_dept(Ind, deli)|C],C).
+adj([checkout | T],T,Ind,[has_dept(Ind, checkout)|C],C).
+adj([cashier | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 
 % Hours adjectives
 adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
