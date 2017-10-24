@@ -67,6 +67,7 @@ noun([day | T],T,Ind,[day(Ind)|C],C).
 noun([shift | T],T,Ind,[shift(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- day(Ind).
 noun([Ind | T],T,Ind,C,C) :- shift(Ind).
+noun([Ind | T],T,Ind,C,C) :- integer(Ind).
 
 % Relations
 reln([works, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
@@ -77,6 +78,7 @@ reln([working, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 % Action Relation
 reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
 reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
+reln([hours,to | T],T,I1,I2,[change_hours(I1,I2)|C],C).
 
 % Questions
 question([is | T0],T2,Ind,C0,C2) :-
@@ -99,8 +101,8 @@ ask(Q,A) :-
     question(Q,[],A,C,[]),
     prove_all(C).
 
-demand(Q, A) :-
-  action(Q,[],A,C,[]),
+demand(Q) :-
+  action(Q,[],_,C,[]),
   prove_all(C).
 
 prove_all([]).
@@ -120,6 +122,9 @@ action([demote | T0],T2,Ind,C0,C2) :-
 action([schedule | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
+action([change | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1),
+    mp(T1,T2,Ind,C1,C2).
 
 promote(X) :-
   retractall_employee(X),
@@ -130,12 +135,16 @@ demote(X) :-
   assert_employee(X).
 
 work_on(X, Y) :-
-  retractall_works_on(works_on(X, Y)),
-  assert(works_on(X, Y)).
+  retractall_works_on(X, Y),
+  assert_works_on(X, Y).
 
 work_in(X, Y) :-
-  retractall_works_in(works_in(X, Y)),
-  assert(works_in(X, Y)).
+  retractall_works_in(X, Y),
+  assert_works_in(X, Y).
+
+change_hours(X, Y) :-
+  retractall_hours(X, _),
+  assert_hours(X, Y).
 
 day(monday).
 day(tuesday).
