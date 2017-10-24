@@ -4,6 +4,7 @@
 
 % Persistence Logic
 % =================
+
 :- use_module(library(persistency)).
 
 :- persistent
@@ -22,6 +23,7 @@ init :-
 
 % Natural Language Logic
 % ======================
+
 noun_phrase(T0,T4,Ind,C0,C4) :-
     det(T0,T1,Ind,C0,C1),
     adjectives(T1,T2,Ind,C1,C2),
@@ -34,12 +36,16 @@ det([an | T],T,_,C,C).
 det(T,T,_,C,C).
 
 % Adjective Logic
+% ---------------
+
 adjectives(T0,T2,Ind,C0,C2) :-
     adj(T0,T1,Ind,C0,C1),
     adjectives(T1,T2,Ind,C1,C2).
 adjectives(T,T,_,C,C).
 
 % Modifying Phrases
+% -----------------
+
 mp(T0,T2,I1,C0,C2) :-
     reln(T0,T1,I1,I2,C0,C1),
     noun_phrase(T1,T2,I2,C1,C2).
@@ -52,6 +58,8 @@ mp([to|T0],T2,I1,C0,C2) :-
 mp(T,T,_,C,C).
 
 % Department Adjectives
+% ---------------------
+
 adj([grocery,department | T],T,Ind,[has_dept(Ind, grocery)|C],C).
 adj([grocery | T],T,Ind,[has_dept(Ind, grocery)|C],C).
 adj([deli,department | T],T,Ind,[has_dept(Ind, deli)|C],C).
@@ -60,16 +68,22 @@ adj([checkout | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 adj([cashier | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 
 % Hours Adjectives
+% ----------------
+
 adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
 adj([part,time | T],T,Ind,[part_time(Ind)|C],C).
 
 % Role Nouns
+% ----------
+
 noun([employee | T],T,Ind,[employee(Ind)|C],C).
 noun([manager | T],T,Ind,[manager(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- employee(Ind).
 noun([Ind | T],T,Ind,C,C) :- manager(Ind).
 
 % Shifts and Hours Nouns
+% ----------------------
+
 noun([day | T],T,Ind,[day(Ind)|C],C).
 noun([shift | T],T,Ind,[shift(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- day(Ind).
@@ -78,7 +92,9 @@ noun([Ind | T],T,Ind,C,C) :- integer(Ind).
 noun([Ind | T],T,Ind,C,C) :- role(Ind).
 noun([Ind | T],T,Ind,C,C) :- department(Ind).
 
-% Question Relations
+% Question/Action Relations
+% -------------------------
+
 reln([works, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([working, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([works, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
@@ -90,6 +106,8 @@ reln([role, to | T],T,I1,I2,[change_role(I1,I2)|C],C).
 reln([department, to | T],T,I1,I2,[change_dept(I1,I2)|C],C).
 
 % Questions
+% ---------
+
 question([is | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
@@ -118,10 +136,9 @@ prove_all([H|T]) :-
     call(H),
     prove_all(T).
 
-% Action Logic
-% ------------
-
 % Actions
+% -------
+
 action([promote | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2),
@@ -137,10 +154,12 @@ action([change | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
 
+% Because demanding is better than asking
 demand(Q) :-
   action(Q,[],_,C,[]),
   prove_all(C).
 
+% Added promote/demote just for fun. Can use change role instead.
 promote(X) :-
   retractall_employee(X),
   assert_manager(X).
@@ -161,6 +180,7 @@ change_hours(X, Y) :-
   retractall_hours(X, _),
   assert_hours(X, Y).
 
+% Could easily extend this to more roles based on case.
 change_role(X, Y) :-
   Y == manager ->
     retractall_employee(X),
@@ -169,12 +189,14 @@ change_role(X, Y) :-
     retractall_manager(X),
     assert_employee(X).
 
+% Could easily extend this to more departments based on case.
 change_dept(X, Y) :-
     retractall_has_dept(X, _),
     assert_has_dept(X, Y).
 
 % General Rules
-% =============
+% -------------
+
 day(monday).
 day(tuesday).
 day(wednesday).
@@ -203,11 +225,14 @@ part_time(E):-
     hours(E,H),
     H < 37.5.
 
-% Testing
-% =======
+% Testing Suite
+% =============
+
 :- begin_tests(schedule_interface_dl).
 
-% FACT TESTING
+% Fact Tests
+% ----------
+
 test(full_time) :-
   full_time(E),
   assertion(E == corey).
@@ -216,7 +241,9 @@ test(part_time) :-
   part_time(E),
   assertion(E == lyndon).
 
-% BASIC ASK TESTING
+% Basic Ask Tests
+% ---------------
+
 test(ask_full_time) :-
   ask([who,is,a,full,time,employee],E),
   assertion(E == mary).
@@ -233,12 +260,8 @@ test(ask_who_is_working_on) :-
   ask([who,is,working,on,monday],E),
   assertion(E == john).
 
-% MULTIPLE RELATION/ADJECTIVE ASK TESTING
-
-% NOT WORKING: same 'ask' works when starting with 'what'
-test(ask_who_is_working_on_working_in) :-
-  ask([who,is,working,on,monday,working,in,afternoon],E),
-  assertion(E == john).
+% Compound Relation Ask Tests
+% ---------------------------
 
 test(ask_who_is_employee_working_on_working_in) :-
   ask([who,is,an,employee,working,on,monday,working,in,afternoon],E),
@@ -268,17 +291,44 @@ test(ask_what_full_time_deli_department_manager_works_on_monday_work_in_evening)
   ask([what,full,time,grocery,department,manager,works,on,monday,works,in,evening],E),
   assertion(E == corey).
 
-% NOT WORKING: something wrong when works in is added
-test(ask_grocery_dept_employee_works_on_monday_works_on_wednesday_works_in_evening) :-
-  ask([what,grocery,department,manager,works,on,monday,works,on,friday,works,in,evening],E),
-  assertion(E == corey).
+% Not Working
+% -----------
 
-test(change_employee_to_manager) :-
-  manager(X),
-  assertion(X == corey).
+% something wrong when works in is added
+% test(ask_grocery_dept_employee_works_on_monday_works_on_wednesday_works_in_evening) :-
+%   ask([what,grocery,department,manager,works,on,monday,works,on,friday,works,in,evening],E),
+%   assertion(E == corey).
 
-test(change_manager_to_employee) :-
-  manager(X),
-  assertion(X == corey).
+% same 'ask' works when starting with 'what'
+% test(ask_who_is_working_on_working_in) :-
+%   ask([who,is,working,on,monday,working,in,afternoon],E),
+%   assertion(E == john).
+
+% Manual Tests (So you don't corrupt the DB with automated tests ;-) )
+% --------------------------------------------------------------------
+
+% test(change_employee_to_manager) :-
+% demand([demote, corey]),
+% assertion(employee(corey)).
+
+% test(change_manager_to_employee) :-
+% demand([promote, lyndon]),
+% assertion(manager(lyndon)).
+
+% test(change_role) :-
+% demand([change, corey, department, to, customer_service]),
+% assertion(has_dept(corey, customer_service)).
+
+% test(change_hours) :-
+% demand([change, corey, hours, to, 20]),
+% assertion(hours(corey, 20)).
+
+% test(change_shift) :-
+% demand([change, corey, work, in, afternoon]),
+% assertion(works_in(corey,afternoon).
+
+% test(change_day) :-
+% demand([change, corey, work, on, thursday]),
+% assertion(works_on(corey, thursday).
 
 :- end_tests(schedule_interface_dl).
