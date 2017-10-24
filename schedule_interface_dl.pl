@@ -1,4 +1,20 @@
-:- dynamic employee/1, manager/1.
+% :- dynamic employee/1, manager/1.
+
+:- use_module(library(persistency)).
+
+:- persistent
+        manager(name:atom),
+        employee(name:atom),
+        hours(name:atom, amount:integer),
+        works_on(name:atom, oneof([monday, tuesday, wednesday, thursday, friday, saturday, sunday]) ),
+        works_in(name:atom, oneof([morning, afternoon, evening])),
+        has_dept(name:atom, oneof([grocery, deli, checkout, customer_service])).
+
+:- initialization(init).
+
+init :-
+  absolute_file_name('fact.db', File, [access(write)]),
+  db_attach(File, []).
 
 noun_phrase(T0,T4,Ind,C0,C4) :-
     det(T0,T1,Ind,C0,C1),
@@ -16,20 +32,25 @@ adjectives(T0,T2,Ind,C0,C2) :-
     adjectives(T1,T2,Ind,C1,C2).
 adjectives(T,T,_,C,C).
 
+% Modifying phrases
 mp(T0,T2,I1,C0,C2) :-
     reln(T0,T1,I1,I2,C0,C1),
     noun_phrase(T1,T2,I2,C1,C2).
 mp([that|T0],T2,I1,C0,C2) :-
     reln(T0,T1,I1,I2,C0,C1),
     noun_phrase(T1,T2,I2,C1,C2).
+mp([to|T0],T2,I1,C0,C2) :-
+    reln(T0,T1,I1,I2,C0,C1),
+    noun_phrase(T1,T2,I2,C1,C2).
 mp(T,T,_,C,C).
 
-adj([grocery,department | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([grocery | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([deli,department | T],T,Ind,[deli_dept(Ind)|C],C).
-adj([deli | T],T,Ind,[grocery_dept(Ind)|C],C).
-adj([checkout | T],T,Ind,[checkout(Ind)|C],C).
-adj([cashier | T],T,Ind,[checkout(Ind)|C],C).
+% Department adjectives
+adj([grocery,department | T],T,Ind,[has_dept(Ind, grocery)|C],C).
+adj([grocery | T],T,Ind,[has_dept(Ind, grocery)|C],C).
+adj([deli,department | T],T,Ind,[has_dept(Ind, deli)|C],C).
+adj([deli | T],T,Ind,[has_dept(Ind, deli)|C],C).
+adj([checkout | T],T,Ind,[has_dept(Ind, checkout)|C],C).
+adj([cashier | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 
 % Hours adjectives
 adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
@@ -53,6 +74,10 @@ reln([working, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([works, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 reln([working, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 
+% Action Relation
+reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
+reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
+
 % Questions
 question([is | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
@@ -63,7 +88,7 @@ question([who,is | T0],T1,Ind,C0,C1) :-
     noun_phrase(T0,T1,Ind,C0,C1).
 question([who,is | T0],T1,Ind,C0,C1) :-
     adjectives(T0,T1,Ind,C0,C1).
-question([what | T0],T2,Ind,C0,C2) :-      % allows for a "what ... is ..."
+question([what | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,[is|T1],Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
 question([what | T0],T2,Ind,C0,C2) :-
@@ -80,7 +105,7 @@ demand(Q, A) :-
 
 prove_all([]).
 prove_all([H|T]) :-
-    call(H),      % built-in Prolog predicate calls an atom
+    call(H),
     prove_all(T).
 
 % Actions
@@ -88,51 +113,41 @@ action([promote | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2),
     promote(Ind).
-
 action([demote | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2),
     demote(Ind).
+action([schedule | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1),
+    mp(T1,T2,Ind,C1,C2).
 
 promote(X) :-
-  retract(employee(X)),
-  assert(manager(X)).
+  retractall_employee(X),
+  assert_manager(X).
 
 demote(X) :-
-  retract(manager(X)),
-  assert(employee(X)).
+  retractall_manager(X),
+  assert_employee(X).
 
-shift(morning).
-shift(afternoon).
-shift(evening).
+work_on(X, Y) :-
+  retractall_works_on(works_on(X, Y)),
+  assert(works_on(X, Y)).
 
-works_in(john,afternoon).
-works_in(mary,morning).
-works_in(corey,evening).
-works_in(lyndon,evening).
-
-works_on(john,monday).
-works_on(corey,monday).
-works_on(mary,tuesday).
-works_on(lyndon,monday).
-works_on(lyndon,wednesday).
+work_in(X, Y) :-
+  retractall_works_in(works_in(X, Y)),
+  assert(works_in(X, Y)).
 
 day(monday).
 day(tuesday).
 day(wednesday).
 day(thursday).
 day(friday).
+day(saturday).
+day(sunday).
 
-manager(corey).
-
-employee(mary).
-employee(john).
-employee(lyndon).
-
-hours(corey, 40).
-hours(lyndon, 20).
-hours(mary, 40).
-hours(john, 20).
+shift(morning).
+shift(afternoon).
+shift(evening).
 
 full_time(E):-
     hours(E,H),
@@ -142,21 +157,12 @@ part_time(E):-
     hours(E,H),
     H < 37.5.
 
-grocery_dept(lyndon).
-deli_dept(corey).
-checkout(mary).
-
-% ask([who,is,works,in,afternoon],X).
-% ask([what,manager,works,in,evening],X).
-% ask([what,manager,works,on,monday,works,in,evening], X).
-% ask([what,employee,works,on,monday,works,in,evening], X).
-
 :- begin_tests(schedule_interface_dl).
 
 % FACT TESTING
 test(manager) :-
   manager(X),
-  assertion(X == corey).
+  assertion(X == mary).
 
 test(employee) :-
   employee(X),
