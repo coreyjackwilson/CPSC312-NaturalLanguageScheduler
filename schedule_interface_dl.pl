@@ -204,7 +204,11 @@ part_time(E):-
 % =======
 :- begin_tests(schedule_interface_dl).
 
-test(manager) :-
+test(change_employee_to_manager) :-
+  manager(X),
+  assertion(X == corey).
+
+test(change_manager_to_employee) :-
   manager(X),
   assertion(X == corey).
 
