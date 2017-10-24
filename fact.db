@@ -1,1 +1,21 @@
 created(1508814451.462256).
+assert(manager(corey)).
+assert(employee(mary)).
+assert(employee(john)).
+assert(employee(lyndon)).
+assert(hours(corey, 40)).
+assert(hours(mary, 40)).
+assert(hours(lyndon, 20)).
+assert(hours(john, 20)).
+assert(works_in(john,afternoon)).
+assert(works_in(mary,morning)).
+assert(works_in(corey,evening)).
+assert(works_in(lyndon,afternoon)).
+assert(works_on(john,monday)).
+assert(works_on(mary,tuesday)).
+assert(works_on(lyndon,monday)).
+assert(works_on(corey,monday)).
+assert(has_dept(corey, grocery)).
+assert(has_dept(lyndon, deli)).
+assert(has_dept(checkout, mary)).
+assert(has_dept(customer_service, john)).
