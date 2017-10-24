@@ -1,5 +1,9 @@
-% :- dynamic employee/1, manager/1.
+% Natural Language schedule
+% Corey Wilson - 17400110
+% Lyndon Won -
 
+% Persistence Logic
+% =================
 :- use_module(library(persistency)).
 
 :- persistent
@@ -16,6 +20,8 @@ init :-
   absolute_file_name('fact.db', File, [access(write)]),
   db_attach(File, []).
 
+% Natural Language Logic
+% ======================
 noun_phrase(T0,T4,Ind,C0,C4) :-
     det(T0,T1,Ind,C0,C1),
     adjectives(T1,T2,Ind,C1,C2),
@@ -27,12 +33,13 @@ det([a | T],T,_,C,C).
 det([an | T],T,_,C,C).
 det(T,T,_,C,C).
 
+% Adjective Logic
 adjectives(T0,T2,Ind,C0,C2) :-
     adj(T0,T1,Ind,C0,C1),
     adjectives(T1,T2,Ind,C1,C2).
 adjectives(T,T,_,C,C).
 
-% Modifying phrases
+% Modifying Phrases
 mp(T0,T2,I1,C0,C2) :-
     reln(T0,T1,I1,I2,C0,C1),
     noun_phrase(T1,T2,I2,C1,C2).
@@ -44,7 +51,7 @@ mp([to|T0],T2,I1,C0,C2) :-
     noun_phrase(T1,T2,I2,C1,C2).
 mp(T,T,_,C,C).
 
-% Department adjectives
+% Department Adjectives
 adj([grocery,department | T],T,Ind,[has_dept(Ind, grocery)|C],C).
 adj([grocery | T],T,Ind,[has_dept(Ind, grocery)|C],C).
 adj([deli,department | T],T,Ind,[has_dept(Ind, deli)|C],C).
@@ -52,31 +59,35 @@ adj([deli | T],T,Ind,[has_dept(Ind, deli)|C],C).
 adj([checkout | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 adj([cashier | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 
-% Hours adjectives
+% Hours Adjectives
 adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
 adj([part,time | T],T,Ind,[part_time(Ind)|C],C).
 
-% Roles
+% Role Nouns
 noun([employee | T],T,Ind,[employee(Ind)|C],C).
 noun([manager | T],T,Ind,[manager(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- employee(Ind).
 noun([Ind | T],T,Ind,C,C) :- manager(Ind).
 
-% Shifts and Days
+% Shifts and Hours Nouns
 noun([day | T],T,Ind,[day(Ind)|C],C).
 noun([shift | T],T,Ind,[shift(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- day(Ind).
 noun([Ind | T],T,Ind,C,C) :- shift(Ind).
+noun([Ind | T],T,Ind,C,C) :- integer(Ind).
+noun([Ind | T],T,Ind,C,C) :- role(Ind).
+noun([Ind | T],T,Ind,C,C) :- department(Ind).
 
-% Relations
+% Question Relations
 reln([works, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([working, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([works, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 reln([working, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
-
-% Action Relation
 reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
 reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
+reln([hours, to | T],T,I1,I2,[change_hours(I1,I2)|C],C).
+reln([role, to | T],T,I1,I2,[change_role(I1,I2)|C],C).
+reln([department, to | T],T,I1,I2,[change_dept(I1,I2)|C],C).
 
 % Questions
 question([is | T0],T2,Ind,C0,C2) :-
@@ -99,14 +110,13 @@ ask(Q,A) :-
     question(Q,[],A,C,[]),
     prove_all(C).
 
-demand(Q, A) :-
-  action(Q,[],A,C,[]),
-  prove_all(C).
-
 prove_all([]).
 prove_all([H|T]) :-
     call(H),
     prove_all(T).
+
+% Action Logic
+% ------------
 
 % Actions
 action([promote | T0],T2,Ind,C0,C2) :-
@@ -120,6 +130,13 @@ action([demote | T0],T2,Ind,C0,C2) :-
 action([schedule | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
+action([change | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1),
+    mp(T1,T2,Ind,C1,C2).
+
+demand(Q) :-
+  action(Q,[],_,C,[]),
+  prove_all(C).
 
 promote(X) :-
   retractall_employee(X),
@@ -130,13 +147,31 @@ demote(X) :-
   assert_employee(X).
 
 work_on(X, Y) :-
-  retractall_works_on(works_on(X, Y)),
-  assert(works_on(X, Y)).
+  retractall_works_on(X, Y),
+  assert_works_on(X, Y).
 
 work_in(X, Y) :-
-  retractall_works_in(works_in(X, Y)),
-  assert(works_in(X, Y)).
+  retractall_works_in(X, Y),
+  assert_works_in(X, Y).
 
+change_hours(X, Y) :-
+  retractall_hours(X, _),
+  assert_hours(X, Y).
+
+change_role(X, Y) :-
+  Y == manager ->
+    retractall_employee(X),
+    assert_manager(X);
+  Y == employee ->
+    retractall_manager(X),
+    assert_employee(X).
+
+change_dept(X, Y) :-
+    retractall_has_dept(X, _),
+    assert_has_dept(X, Y).
+
+% General Rules
+% =============
 day(monday).
 day(tuesday).
 day(wednesday).
@@ -149,6 +184,14 @@ shift(morning).
 shift(afternoon).
 shift(evening).
 
+role(manager).
+role(employee).
+
+department(grocery).
+department(deli).
+department(checkout).
+department(customer_service).
+
 full_time(E):-
     hours(E,H),
     H >= 37.5.
@@ -157,21 +200,11 @@ part_time(E):-
     hours(E,H),
     H < 37.5.
 
+% Testing
+% =======
 :- begin_tests(schedule_interface_dl).
 
 % FACT TESTING
-test(manager) :-
-  manager(X),
-  assertion(X == mary).
-
-test(employee) :-
-  employee(X),
-  assertion(X == mary).
-
-test(hours) :-
-  hours(john,X),
-  assertion(X == 20).
-
 test(full_time) :-
   full_time(E),
   assertion(E == corey).
@@ -185,8 +218,8 @@ test(ask_full_time) :-
   ask([who,is,a,full,time,employee],E),
   assertion(E == mary).
 
-test(ask_deli_dept) :-
-  ask([who,is,the,deli,department,manager],E),
+test(ask_grocery_deptartment) :-
+  ask([who,is,the,grocery,department,manager],E),
   assertion(E == corey).
 
 test(ask_who_is_working_in) :-
@@ -201,12 +234,12 @@ test(ask_who_is_working_on) :-
 
 % NOT WORKING: same 'ask' works when starting with 'what'
 test(ask_who_is_working_on_working_in) :-
-  ask([who,is,working,on,monday,working,in,evening],E),
-  assertion(E == lyndon).
+  ask([who,is,working,on,monday,working,in,afternoon],E),
+  assertion(E == john).
 
 test(ask_what_employee_works_on_works_in) :-
-  ask([what,employee,works,on,monday,works,in,evening],E),
-  assertion(E == lyndon).
+  ask([what,employee,works,on,monday,works,in,afternoon],E),
+  assertion(E == john).
 
 test(ask_what_employee_works_in_works_on) :-
   ask([what,employee,works,in,afternoon,works,on,monday],E),
@@ -217,21 +250,21 @@ test(ask_what_manager_works_in_works_on) :-
   assertion(E == corey).
 
 test(ask_grocery_dept_employee_works_on_monday_works_in_morning) :-
-  ask([what,grocery,employee,works,on,monday,works,in,evening],E),
+  ask([what,deli,employee,works,on,monday,works,in,afternoon],E),
   assertion(E == lyndon).
 
 test(ask_what_grocery_employee_works_on_monday_works_on_wednesday) :-
-  ask([what,grocery,employee,works,on,monday,works,on,wednesday],E),
-  assertion(E == lyndon).
+  ask([what,grocery,manager,works,on,monday,works,on,friday],E),
+  assertion(E == corey).
 
 test(ask_what_full_time_deli_department_manager_works_on_monday_work_in_evening) :-
-  ask([what,full,time,deli,department,manager,works,on,monday,works,in,evening],E),
+  ask([what,full,time,grocery,department,manager,works,on,monday,works,in,evening],E),
   assertion(E == corey).
 
 % NOT WORKING: something wrong when works in is added
 test(ask_grocery_dept_employee_works_on_monday_works_on_wednesday_works_in_evening) :-
-  ask([what,grocery,employee,works,on,monday,works,on,wednesday,works,in,evening],E),
-  assertion(E == lyndon).
+  ask([what,grocery,department,manager,works,on,monday,works,on,friday,works,in,evening],E), 
+  assertion(E == corey).
 
 
 :- end_tests(schedule_interface_dl).
