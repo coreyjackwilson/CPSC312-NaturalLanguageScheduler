@@ -19,3 +19,7 @@ assert(has_dept(corey, grocery)).
 assert(has_dept(lyndon, deli)).
 assert(has_dept(checkout, mary)).
 assert(has_dept(customer_service, john)).
+retractall(manager(corey),1).
+assert(employee(corey)).
+retractall(employee(lyndon),1).
+assert(manager(lyndon)).
