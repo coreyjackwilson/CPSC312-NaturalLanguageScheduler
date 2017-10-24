@@ -1,4 +1,14 @@
-:- dynamic employee/1, manager/1.
+% :- dynamic employee/1, manager/1.
+
+:- use_module(library(persistency)).
+
+:- persistent fact(fact1:any, fact2:any).
+
+:- initialization(init).
+
+init :-
+  absolute_file_name('fact.db', File, [access(write)]),
+  db_attach(File, []).
 
 noun_phrase(T0,T4,Ind,C0,C4) :-
     det(T0,T1,Ind,C0,C1),
@@ -16,10 +26,14 @@ adjectives(T0,T2,Ind,C0,C2) :-
     adjectives(T1,T2,Ind,C1,C2).
 adjectives(T,T,_,C,C).
 
+% Modifying phrases
 mp(T0,T2,I1,C0,C2) :-
     reln(T0,T1,I1,I2,C0,C1),
     noun_phrase(T1,T2,I2,C1,C2).
 mp([that|T0],T2,I1,C0,C2) :-
+    reln(T0,T1,I1,I2,C0,C1),
+    noun_phrase(T1,T2,I2,C1,C2).
+mp([to|T0],T2,I1,C0,C2) :-
     reln(T0,T1,I1,I2,C0,C1),
     noun_phrase(T1,T2,I2,C1,C2).
 mp(T,T,_,C,C).
@@ -53,6 +67,10 @@ reln([working, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([works, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 reln([working, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 
+% Action Relation
+reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
+reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
+
 % Questions
 question([is | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
@@ -63,7 +81,7 @@ question([who,is | T0],T1,Ind,C0,C1) :-
     noun_phrase(T0,T1,Ind,C0,C1).
 question([who,is | T0],T1,Ind,C0,C1) :-
     adjectives(T0,T1,Ind,C0,C1).
-question([what | T0],T2,Ind,C0,C2) :-      % allows for a "what ... is ..."
+question([what | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,[is|T1],Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
 question([what | T0],T2,Ind,C0,C2) :-
@@ -80,7 +98,7 @@ demand(Q, A) :-
 
 prove_all([]).
 prove_all([H|T]) :-
-    call(H),      % built-in Prolog predicate calls an atom
+    call(H),
     prove_all(T).
 
 % Actions
@@ -88,11 +106,13 @@ action([promote | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2),
     promote(Ind).
-
 action([demote | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2),
     demote(Ind).
+action([schedule | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1),
+    mp(T1,T2,Ind,C1,C2).
 
 promote(X) :-
   retract(employee(X)),
@@ -101,6 +121,14 @@ promote(X) :-
 demote(X) :-
   retract(manager(X)),
   assert(employee(X)).
+
+work_on(X, Y) :-
+  retract(works_on(X, Y)),
+  assert(works_on(X, Y)).
+
+work_in(X, Y) :-
+  retract(works_in(X, Y)),
+  assert(works_in(X, Y)).
 
 shift(morning).
 shift(afternoon).
@@ -114,6 +142,7 @@ works_in(lyndon,afternoon).
 works_on(john,monday).
 works_on(corey,monday).
 works_on(mary,tuesday).
+works_on(lyndon,m).
 
 day(monday).
 day(tuesday).
@@ -141,8 +170,9 @@ part_time(E):-
     H < 37.5.
 
 grocery_dept(corey).
-deli_dept(corey).
+deli_dept(lyndon).
 checkout(mary).
+customer_service_dept(lyndon).
 
 /* Try the following queries
 | ?- ask([is,john,enrolled,in,cs312],_).
