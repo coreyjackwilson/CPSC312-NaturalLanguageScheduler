@@ -204,6 +204,68 @@ part_time(E):-
 % =======
 :- begin_tests(schedule_interface_dl).
 
+% FACT TESTING
+test(full_time) :-
+  full_time(E),
+  assertion(E == corey).
+
+test(part_time) :-
+  part_time(E),
+  assertion(E == lyndon).
+
+% BASIC ASK TESTING
+test(ask_full_time) :-
+  ask([who,is,a,full,time,employee],E),
+  assertion(E == mary).
+
+test(ask_grocery_deptartment) :-
+  ask([who,is,the,grocery,department,manager],E),
+  assertion(E == corey).
+
+test(ask_who_is_working_in) :-
+  ask([who,is,working,in,the,morning],E),
+  assertion(E == mary).
+
+test(ask_who_is_working_on) :-
+  ask([who,is,working,on,monday],E),
+  assertion(E == john).
+
+% MULTIPLE RELATION/ADJECTIVE ASK TESTING
+
+% NOT WORKING: same 'ask' works when starting with 'what'
+test(ask_who_is_working_on_working_in) :-
+  ask([who,is,working,on,monday,working,in,afternoon],E),
+  assertion(E == john).
+
+test(ask_what_employee_works_on_works_in) :-
+  ask([what,employee,works,on,monday,works,in,afternoon],E),
+  assertion(E == john).
+
+test(ask_what_employee_works_in_works_on) :-
+  ask([what,employee,works,in,afternoon,works,on,monday],E),
+  assertion(E == john).
+
+test(ask_what_manager_works_in_works_on) :-
+  ask([what,manager,works,in,evening,works,on,monday],E),
+  assertion(E == corey).
+
+test(ask_grocery_dept_employee_works_on_monday_works_in_morning) :-
+  ask([what,deli,employee,works,on,monday,works,in,afternoon],E),
+  assertion(E == lyndon).
+
+test(ask_what_grocery_employee_works_on_monday_works_on_wednesday) :-
+  ask([what,grocery,manager,works,on,monday,works,on,friday],E),
+  assertion(E == corey).
+
+test(ask_what_full_time_deli_department_manager_works_on_monday_work_in_evening) :-
+  ask([what,full,time,grocery,department,manager,works,on,monday,works,in,evening],E),
+  assertion(E == corey).
+
+% NOT WORKING: something wrong when works in is added
+test(ask_grocery_dept_employee_works_on_monday_works_on_wednesday_works_in_evening) :-
+  ask([what,grocery,department,manager,works,on,monday,works,on,friday,works,in,evening],E), 
+  assertion(E == corey).
+
 test(change_employee_to_manager) :-
   manager(X),
   assertion(X == corey).
