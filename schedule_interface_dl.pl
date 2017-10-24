@@ -1,5 +1,9 @@
-% :- dynamic employee/1, manager/1.
+% Natural Language schedule
+% Corey Wilson - 17400110
+% Lyndon Won -
 
+% Persistence Logic
+% =================
 :- use_module(library(persistency)).
 
 :- persistent
@@ -16,6 +20,8 @@ init :-
   absolute_file_name('fact.db', File, [access(write)]),
   db_attach(File, []).
 
+% Natural Language Logic
+% ======================
 noun_phrase(T0,T4,Ind,C0,C4) :-
     det(T0,T1,Ind,C0,C1),
     adjectives(T1,T2,Ind,C1,C2),
@@ -27,12 +33,13 @@ det([a | T],T,_,C,C).
 det([an | T],T,_,C,C).
 det(T,T,_,C,C).
 
+% Adjective Logic
 adjectives(T0,T2,Ind,C0,C2) :-
     adj(T0,T1,Ind,C0,C1),
     adjectives(T1,T2,Ind,C1,C2).
 adjectives(T,T,_,C,C).
 
-% Modifying phrases
+% Modifying Phrases
 mp(T0,T2,I1,C0,C2) :-
     reln(T0,T1,I1,I2,C0,C1),
     noun_phrase(T1,T2,I2,C1,C2).
@@ -44,7 +51,7 @@ mp([to|T0],T2,I1,C0,C2) :-
     noun_phrase(T1,T2,I2,C1,C2).
 mp(T,T,_,C,C).
 
-% Department adjectives
+% Department Adjectives
 adj([grocery,department | T],T,Ind,[has_dept(Ind, grocery)|C],C).
 adj([grocery | T],T,Ind,[has_dept(Ind, grocery)|C],C).
 adj([deli,department | T],T,Ind,[has_dept(Ind, deli)|C],C).
@@ -52,33 +59,28 @@ adj([deli | T],T,Ind,[has_dept(Ind, deli)|C],C).
 adj([checkout | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 adj([cashier | T],T,Ind,[has_dept(Ind, checkout)|C],C).
 
-% Hours adjectives
+% Hours Adjectives
 adj([full,time | T],T,Ind,[full_time(Ind)|C],C).
 adj([part,time | T],T,Ind,[part_time(Ind)|C],C).
 
-% Roles
+% Role Nouns
 noun([employee | T],T,Ind,[employee(Ind)|C],C).
 noun([manager | T],T,Ind,[manager(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- employee(Ind).
 noun([Ind | T],T,Ind,C,C) :- manager(Ind).
 
-% Shifts and Days
+% Shifts and Hours Nouns
 noun([day | T],T,Ind,[day(Ind)|C],C).
 noun([shift | T],T,Ind,[shift(Ind)|C],C).
 noun([Ind | T],T,Ind,C,C) :- day(Ind).
 noun([Ind | T],T,Ind,C,C) :- shift(Ind).
 noun([Ind | T],T,Ind,C,C) :- integer(Ind).
 
-% Relations
+% Question Relations
 reln([works, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([working, in | T],T,I1,I2,[works_in(I1,I2)|C],C).
 reln([works, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
 reln([working, on | T],T,I1,I2,[works_on(I1,I2)|C],C).
-
-% Action Relation
-reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
-reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
-reln([hours,to | T],T,I1,I2,[change_hours(I1,I2)|C],C).
 
 % Questions
 question([is | T0],T2,Ind,C0,C2) :-
@@ -101,14 +103,18 @@ ask(Q,A) :-
     question(Q,[],A,C,[]),
     prove_all(C).
 
-demand(Q) :-
-  action(Q,[],_,C,[]),
-  prove_all(C).
-
 prove_all([]).
 prove_all([H|T]) :-
     call(H),
     prove_all(T).
+
+% Action Logic
+% ------------
+
+% Action Relations
+reln([work, on | T],T,I1,I2,[work_on(I1,I2)|C],C).
+reln([work, in | T],T,I1,I2,[work_in(I1,I2)|C],C).
+reln([hours, to | T],T,I1,I2,[change_hours(I1,I2)|C],C).
 
 % Actions
 action([promote | T0],T2,Ind,C0,C2) :-
@@ -125,6 +131,10 @@ action([schedule | T0],T2,Ind,C0,C2) :-
 action([change | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
+
+demand(Q) :-
+  action(Q,[],_,C,[]),
+  prove_all(C).
 
 promote(X) :-
   retractall_employee(X),
@@ -146,6 +156,8 @@ change_hours(X, Y) :-
   retractall_hours(X, _),
   assert_hours(X, Y).
 
+% General Rules
+% =============
 day(monday).
 day(tuesday).
 day(wednesday).
@@ -166,6 +178,8 @@ part_time(E):-
     hours(E,H),
     H < 37.5.
 
+% Testing
+% =======
 :- begin_tests(schedule_interface_dl).
 
 test(manager) :-
