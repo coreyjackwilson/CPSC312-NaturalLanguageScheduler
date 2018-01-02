@@ -1,9 +1,11 @@
-== Shift Scheduler ==
-Authors: Corey Jack Wilson, Lyndon Won
-== What is the problem? ==
+# Shift Scheduler
+## Authors 
+Corey Jack Wilson, Lyndon Won
+
+## What is the problem? 
 For a large majority of workplaces, scheduling shifts is handled using charts or spreadsheets. This form of scheduling can become quite complex, especially when dealing with multiple departments and  large teams. Moreover, current scheduling solutions require explicit knowledge in order manipulate data which makes adjusting them difficult and time-consuming. We plan to build a scheduling system that allows users to ask questions about the schedule. The program will take a list of shifts with information on time, department, role and employee, which the program can interact with to perform different natural language queries and adjustments.
 
-== What are the necessary user stories we have addressed? ==
+## What are the necessary user stories we have addressed?
 * As an employee:
 ** I can ask questions about my current shifts on the schedule
 ** I can ask questions about who the manager is during my shift
@@ -12,7 +14,7 @@ For a large majority of workplaces, scheduling shifts is handled using charts or
 ** I can ask questions about which employees are working in a department during a current time on the schedule.
 ** I can find out which employees are not working during a certain time so I can find someone to cover time off.
 
-== What is the something extra? ==
+## What is the something extra? 
 We will attempt to address several other use cases:
 * As an employee, I can schedule myself to work during a time that is not currently on the schedule
 * As a manager:
@@ -20,7 +22,7 @@ We will attempt to address several other use cases:
 ** I can promote an employee to a manager
 ** I can change an employees department
 
-== Known Issues/Bugs ==
+## Known Issues/Bugs
 1. The 'who is' questions can only take 1 relation, otherwise it returns false.
 * Seems to be caused by the lack of a subject (employee, manager) so the second relations uses the noun from the first relation as its subject.
 * Example: <code>ask([who,is,working,on,monday,working,in,the,morning],A).</code> will try to prove <code>works_in(monday,morning).</code> instead of <code>works_in(_some_employee,morning).</code>
@@ -28,7 +30,7 @@ We will attempt to address several other use cases:
 * Happens when relation types are different and when they are all the same.
 * Example: <code>ask([what,manager,works,on,monday,works,on,tuesday,works,on,friday],E).</code>
 
-== Change Notes ==
+## Change Notes
 1. We moved the following user stories to 'Something Extra' because we felt it went further beyond the what was learned in class and wanted to do it the right way by actually persisting the data (instead of merely mutating the program).
 * As an employee, I can schedule myself to work during a time that is not currently on the schedule
 * As two employees, we can trade shifts
@@ -39,7 +41,7 @@ We will attempt to address several other use cases:
 * I can have employees suggested to me for when another employee takes time off -> I can find out which employees are not working during a certain time so I can find someone to cover time off.
 * As two employees, we can trade shifts -> As a manager, I can swap the shifts of two employees
 
-== What did we learn from doing this? ==
+## What did we learn from doing this?
 '''Does the code work?'''
 As far as code quality, we wrote a test suite for several queries in the basic user stories and for the advanced user stories. The coverage shows that the functionality works, although there are two known bugs for which they are documented and their tests have been commented out. Please make sure you run any manual tests against a default database.
 
@@ -57,6 +59,3 @@ Further extension of this scheduler should consider:
 
 '''Is the conclusion on the feasibility of your approach justiﬁed by the evidence?'''
 As far as feasibility of using Prolog for such a task, we conclude that it is sufficient as a language for scheduling, natural language parsing, and even to some degree, simple database management. The main concern lies in how integrated Prolog could be with a modern RDBMS in order to take advantage of all their advanced querying features. Since most business data is in some for of relational database already, it might not make sense to translate this data to Prolog facts for the mere sake of utilizing Prolog as a NL interface. That said, as mentioned earlier, if one could utilize the NL parser to create SQL statements, this might be a more suitable task for Prolog rather then recreating the DB. Our main pain points were in coding in relations and constraints for the data and how coupled they are to the natural language logic. While having constraints deeply embedded in the NL logic makes sense, engraining -database- constraints into the NL logic seems to defy good design principles (i.e. having to modify a noun fact whenever a new noun is added). Thus, we summarize that while Prolog is suitable to the task of NLP and querying, it might be too far to extend this to a full RDBMS (which most production schedules and data sets are already contained in).
-
-== Source Code ==
-[https://github.com/coreyjackwilson/natural-language-scheduler Github Repository]
